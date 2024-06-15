@@ -1,7 +1,7 @@
-import { json } from 'stream/consumers'
-
 export const defHeader = {
   'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': '*',
+  'Access-Control-Allow-Methods': '*',
   'Access-Control-Allow-Credentials': true,
   'Content-Type': 'application/json',
 }
