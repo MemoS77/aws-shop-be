@@ -1,11 +1,10 @@
+import mockedList from './mockedList'
+
 // event
-const getProductsList = async (event: unknown) => {
-  console.log(event)
+export const handler = async (event: unknown) => {
   return {
     statusCode: 200,
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ message: 'Hello, World!' }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(mockedList),
   }
 }
-
-export default getProductsList
