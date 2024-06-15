@@ -1,8 +1,6 @@
 # Welcome to your CDK TypeScript project
 
-This is a blank project for CDK development with TypeScript.
-
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+Prod: https://ppg1z1ffui.execute-api.eu-west-1.amazonaws.com/prod
 
 ## Useful commands
 
@@ -16,3 +14,8 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 ## Local launch with Docker and SAM
 
 `sam local start-api --template cdk.out/ProductServiceStack.template.json`
+
+## Get openapi.yaml
+
+But, without response scheme.
+`aws apigateway get-export --rest-api-id ppg1z1ffui --stage-name prod --export-type swagger openapi.yaml`
