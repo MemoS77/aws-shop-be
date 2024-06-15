@@ -1,5 +1,6 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda'
 import mockedList from './mockedList'
+import { doResponse } from './inc'
 
 // event
 export const handler = async (event: APIGatewayProxyEvent) => {
@@ -7,17 +8,9 @@ export const handler = async (event: APIGatewayProxyEvent) => {
   if (id) {
     const item = mockedList.find((item) => item.id === id)
     if (item) {
-      return {
-        statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(item),
-      }
+      return doResponse(200, item)
     }
   }
 
-  return {
-    statusCode: 404,
-    headers: { 'Content-Type': 'text/plain' },
-    body: 'Product not found',
-  }
+  return doResponse(404, { message: 'Product not found' })
 }
