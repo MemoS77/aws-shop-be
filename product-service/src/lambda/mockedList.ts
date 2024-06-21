@@ -4,7 +4,7 @@ const mockedList: ProductItem[] = [
   {
     id: 's1',
     title: 'Two cats',
-    description: '2 little cats',
+    description: 'Two little cats',
     price: 3,
     count: 50,
     image: 'https://grandgames.net/pics/puzzle/dva_kotenka_4.jpg',
@@ -26,7 +26,7 @@ const mockedList: ProductItem[] = [
     image: 'https://grandgames.net/pics/puzzle/manul_3.jpg',
   },
   {
-    id: 'i3',
+    id: 'm3',
     title: 'Beautiful Girl',
     description: 'AI generated very beautiful woman with yellow flowers',
     price: 150,

@@ -13,7 +13,7 @@ export class ProductServiceStack extends cdk.Stack {
       'getProductsListFunction',
       {
         runtime: lambda.Runtime.NODEJS_20_X,
-        code: lambda.Code.fromAsset('./src/lambda'),
+        code: lambda.Code.fromAsset('./dist/lambda'),
         handler: 'getProductsList.handler',
       },
     )
@@ -24,7 +24,7 @@ export class ProductServiceStack extends cdk.Stack {
       'getProductsByIdFunction',
       {
         runtime: lambda.Runtime.NODEJS_20_X,
-        code: lambda.Code.fromAsset('./src/lambda'),
+        code: lambda.Code.fromAsset('./dist/lambda'),
         handler: 'getProductsById.handler',
       },
     )

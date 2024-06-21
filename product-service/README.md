@@ -1,6 +1,6 @@
 # Welcome to your CDK TypeScript project
 
-Prod: https://ppg1z1ffui.execute-api.eu-west-1.amazonaws.com/prod
+API URL: https://ppg1z1ffui.execute-api.eu-west-1.amazonaws.com/prod
 
 ## Useful commands
 
@@ -15,7 +15,7 @@ Prod: https://ppg1z1ffui.execute-api.eu-west-1.amazonaws.com/prod
 
 `sam local start-api --template cdk.out/ProductServiceStack.template.json`
 
-## Get openapi.yaml
+## Get openapi.json
 
 But, without response scheme.
-`aws apigateway get-export --rest-api-id ppg1z1ffui --stage-name prod --export-type swagger openapi.yaml`
+`aws apigateway get-export --rest-api-id ppg1z1ffui --stage-name prod --export-type swagger openapi.json`
