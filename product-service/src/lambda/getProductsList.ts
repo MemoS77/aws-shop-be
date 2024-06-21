@@ -1,6 +1,8 @@
-import mockedList from '../model/db/mockedList'
+import { getAll } from './db'
 import { doResponse } from './inc'
 
 export const handler = async () => {
-  return doResponse(200, mockedList)
+  const products = await getAll('products')
+  if (!products) return doResponse(500, { message: 'DB error' })
+  return doResponse(200, products)
 }
