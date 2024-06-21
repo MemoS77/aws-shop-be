@@ -1,5 +1,5 @@
 import { handler } from '../lambda/getProductsById'
-import mockedList from '../lambda/mockedList'
+import mockedList from '../model/db/mockedList'
 
 describe('productById', () => {
   it('should be exist and eual and 200 response', async () => {

@@ -1,6 +1,7 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda'
-import mockedList from './mockedList'
+
 import { doResponse } from './inc'
+import mockedList from '../model/db/mockedList'
 
 // event
 export const handler = async (event: APIGatewayProxyEvent) => {
