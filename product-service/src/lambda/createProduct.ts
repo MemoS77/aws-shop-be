@@ -1,6 +1,12 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda'
-import { createProduct } from './db'
-import { TABLE_PRODUCTS, doResponse, logError, logRequest } from './inc'
+import { createProduct, transaction } from './db'
+import {
+  TABLE_PRODUCTS,
+  TABLE_STOCKS,
+  doResponse,
+  logError,
+  logRequest,
+} from './inc'
 
 export const handler = async (event: APIGatewayProxyEvent) => {
   logRequest(event)
@@ -14,24 +20,53 @@ export const handler = async (event: APIGatewayProxyEvent) => {
   }
 
   try {
-    const { id, title, description, price } = body
+    const { id, title, description, price, count } = body
 
     // Пример валидации данных
-    if (!id || !title || !description || !price || typeof price !== 'number') {
+    if (
+      !id ||
+      !title ||
+      !description ||
+      !price ||
+      typeof price !== 'number' ||
+      !count ||
+      typeof count !== 'number'
+    ) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ message: 'Invalid product data' }),
+        body: JSON.stringify({
+          message:
+            'Invalid product data. Provide id, title, description, price, count',
+        }),
       }
     }
 
+    /*
     const item = await createProduct(TABLE_PRODUCTS, {
       id,
       title,
       description,
       price,
-    })
+    })*/
 
-    return doResponse(200, item)
+    const productItem = {
+      id,
+      title,
+      description,
+      price,
+    }
+
+    const stockItem = {
+      product_id: id,
+      count,
+    }
+
+    await transaction([
+      { Put: { TableName: TABLE_PRODUCTS, Item: productItem } },
+      { Put: { TableName: TABLE_STOCKS, Item: stockItem } },
+    ])
+
+    return doResponse(200, { message: 'Product created' })
   } catch (error) {
     console.error('Error creating product:', error)
     return {

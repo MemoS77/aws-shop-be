@@ -69,6 +69,7 @@ export class ProductServiceStack extends cdk.Stack {
     )
 
     productsTable.grantWriteData(createProductFunction)
+    stocksTable.grantWriteData(createProductFunction)
 
     productsTable.grantReadData(getProductsList)
     stocksTable.grantReadData(getProductsList)

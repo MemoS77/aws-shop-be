@@ -4,6 +4,7 @@ import {
   GetCommand,
   PutCommand,
   ScanCommand,
+  TransactWriteCommand,
 } from '@aws-sdk/lib-dynamodb'
 
 const client = new DynamoDBClient()
@@ -40,4 +41,15 @@ export async function createProduct(
   })
   await dbClient.send(command)
   return item
+}
+
+export async function transaction(
+  transactItems: any,
+): Promise<any | undefined> {
+  const command = new TransactWriteCommand({
+    TransactItems: transactItems,
+  })
+
+  await dbClient.send(command)
+  return true
 }
