@@ -87,10 +87,9 @@ export class ProductServiceStack extends cdk.Stack {
     const productsResource = api.root.addResource('products')
     productsResource.addMethod('GET') // GET /products
 
-    productsResource.addMethod(
-      'POST',
-      new apigateway.LambdaIntegration(createProductFunction),
-    )
+    const gate = new apigateway.LambdaIntegration(createProductFunction)
+    productsResource.addMethod('POST', gate)
+    //productsResource.addMethod('PUT', gate)
 
     const productByIdResource = productsResource.addResource('{id}')
     productByIdResource.addMethod(

@@ -31,6 +31,7 @@ export async function getOne<T = any>(
   return res.Item as T
 }
 
+/*
 export async function createProduct(
   tableName: string,
   item: any,
@@ -41,7 +42,7 @@ export async function createProduct(
   })
   await dbClient.send(command)
   return item
-}
+}*/
 
 export async function transaction(
   transactItems: any,

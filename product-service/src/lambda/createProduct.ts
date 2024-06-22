@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda'
-import { createProduct, transaction } from './db'
+import { transaction } from './db'
 import {
   TABLE_PRODUCTS,
   TABLE_STOCKS,
@@ -7,6 +7,7 @@ import {
   logError,
   logRequest,
 } from './inc'
+import { randomUUID } from 'crypto'
 
 export const handler = async (event: APIGatewayProxyEvent) => {
   logRequest(event)
@@ -20,11 +21,10 @@ export const handler = async (event: APIGatewayProxyEvent) => {
   }
 
   try {
-    const { id, title, description, price, count } = body
+    const { title, description, price, count } = body
 
     // Пример валидации данных
     if (
-      !id ||
       !title ||
       !description ||
       !price ||
@@ -40,7 +40,6 @@ export const handler = async (event: APIGatewayProxyEvent) => {
         }),
       }
     }
-
     /*
     const item = await createProduct(TABLE_PRODUCTS, {
       id,
@@ -48,6 +47,8 @@ export const handler = async (event: APIGatewayProxyEvent) => {
       description,
       price,
     })*/
+
+    const id = randomUUID()
 
     const productItem = {
       id,
