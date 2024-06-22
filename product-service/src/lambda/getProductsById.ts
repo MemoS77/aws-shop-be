@@ -9,5 +9,5 @@ export const handler = async (event: APIGatewayProxyEvent) => {
     const item = await getOne('products', id)
     if (item) return doResponse(200, item)
   }
-  return doResponse(404, { message: 'Product not found' })
+  return doResponse(404, { message: `Product ${id} not found` })
 }
