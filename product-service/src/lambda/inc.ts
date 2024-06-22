@@ -24,8 +24,8 @@ export const logRequest = (event?: APIGatewayProxyEvent) => {
     )
 }
 
-export const logError = (err: unknown) => {
-  console.error('API_ERROR', err)
+export const logError = (err: unknown, message?: string) => {
+  console.error('API_ERROR' + (message ? `: ${message}` : ''), err)
 }
 
 export const TABLE_PRODUCTS = process.env.TABLE_PRODUCTS!

@@ -2,6 +2,7 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import {
   DynamoDBDocumentClient,
   GetCommand,
+  PutCommand,
   ScanCommand,
 } from '@aws-sdk/lib-dynamodb'
 
@@ -27,4 +28,16 @@ export async function getOne<T = any>(
   })
   const res = await dbClient.send(command)
   return res.Item as T
+}
+
+export async function createProduct(
+  tableName: string,
+  item: any,
+): Promise<any | undefined> {
+  const command = new PutCommand({
+    TableName: tableName,
+    Item: item,
+  })
+  await dbClient.send(command)
+  return item
 }
