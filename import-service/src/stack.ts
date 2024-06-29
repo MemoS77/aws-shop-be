@@ -13,6 +13,19 @@ export class ImportServiceStack extends cdk.Stack {
 
     const bucket = new s3.Bucket(this, 'ImportServiceBucket', {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
+      cors: [
+        {
+          allowedMethods: [
+            //s3.HttpMethods.GET,
+            s3.HttpMethods.PUT,
+            //s3.HttpMethods.POST,
+            //s3.HttpMethods.DELETE,
+            s3.HttpMethods.HEAD,
+          ],
+          allowedOrigins: ['*'], // Для теста все. В продакшене необходимо: https://d1sqwar1feok6t.cloudfront.net
+          allowedHeaders: ['*'],
+        },
+      ],
     })
 
     const importProductsFileLambda = new lambda.Function(
