@@ -1,3 +1,5 @@
+import { APIGatewayProxyEvent } from 'aws-lambda'
+
 export const defHeader = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': '*',
@@ -11,3 +13,20 @@ export const doResponse = (statusCode: number, body: object) => ({
   headers: defHeader,
   body: JSON.stringify(body),
 })
+
+export const logRequest = (event?: APIGatewayProxyEvent) => {
+  if (event)
+    console.log(
+      'API_REQUEST',
+      event.path,
+      event.queryStringParameters,
+      event.body,
+    )
+}
+
+export const logError = (err: unknown, message?: string) => {
+  console.error('API_ERROR' + (message ? `: ${message}` : ''), err)
+}
+
+export const TABLE_PRODUCTS = process.env.TABLE_PRODUCTS!
+export const TABLE_STOCKS = process.env.TABLE_STOCKS!
