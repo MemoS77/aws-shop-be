@@ -2,8 +2,10 @@ import * as cdk from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import * as s3 from 'aws-cdk-lib/aws-s3'
 import * as lambda from 'aws-cdk-lib/aws-lambda'
+import * as s3n from 'aws-cdk-lib/aws-s3-notifications'
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as iam from 'aws-cdk-lib/aws-iam'
+import { join } from 'path'
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -19,7 +21,7 @@ export class ImportServiceStack extends cdk.Stack {
       {
         runtime: lambda.Runtime.NODEJS_20_X,
         handler: 'importProductsFile.handler',
-        code: lambda.Code.fromAsset('./dist/lambda'), // Путь к коду Lambda функции
+        code: lambda.Code.fromAsset(join(__dirname, '../dist/lambda')),
         environment: {
           BUCKET_NAME: bucket.bucketName,
         },
@@ -38,11 +40,33 @@ export class ImportServiceStack extends cdk.Stack {
       new apigateway.LambdaIntegration(importProductsFileLambda),
     )
 
-    // Права доступа для API Gateway
     const apiGatewayPolicy = new iam.PolicyStatement({
       actions: ['s3:GetObject', 's3:PutObject'],
-      resources: [bucket.bucketArn + '/*'],
+      resources: [`${bucket.bucketArn}/*`],
     })
     importProductsFileLambda.addToRolePolicy(apiGatewayPolicy)
+
+    const importFileParserLambda = new lambda.Function(
+      this,
+      'ImportFileParserLambda',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'importFileParser.handler',
+        code: lambda.Code.fromAsset(join(__dirname, '../dist/lambda')),
+        environment: {
+          BUCKET_NAME: bucket.bucketName,
+        },
+      },
+    )
+
+    bucket.grantRead(importFileParserLambda)
+
+    bucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED,
+      new s3n.LambdaDestination(importFileParserLambda),
+      {
+        prefix: 'uploaded/',
+      },
+    )
   }
 }
