@@ -15,18 +15,16 @@ export class ImportServiceStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       cors: [
         {
-          allowedMethods: [
-            //s3.HttpMethods.GET,
-            s3.HttpMethods.PUT,
-            //s3.HttpMethods.POST,
-            //s3.HttpMethods.DELETE,
-            s3.HttpMethods.HEAD,
-          ],
+          allowedMethods: [s3.HttpMethods.PUT, s3.HttpMethods.HEAD],
           allowedOrigins: ['*'], // Для теста все. В продакшене необходимо: https://d1sqwar1feok6t.cloudfront.net
           allowedHeaders: ['*'],
         },
       ],
     })
+
+    const environment = {
+      BUCKET_NAME: bucket.bucketName,
+    }
 
     const importProductsFileLambda = new lambda.Function(
       this,
@@ -35,9 +33,7 @@ export class ImportServiceStack extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_20_X,
         handler: 'importProductsFile.handler',
         code: lambda.Code.fromAsset(join(__dirname, '../dist/lambda')),
-        environment: {
-          BUCKET_NAME: bucket.bucketName,
-        },
+        environment,
       },
     )
 
@@ -66,13 +62,23 @@ export class ImportServiceStack extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_20_X,
         handler: 'importFileParser.handler',
         code: lambda.Code.fromAsset(join(__dirname, '../dist/lambda')),
-        environment: {
-          BUCKET_NAME: bucket.bucketName,
-        },
+        environment,
       },
     )
 
-    bucket.grantRead(importFileParserLambda)
+    const policy = new iam.PolicyStatement({
+      actions: [
+        's3:GetObject',
+        's3:PutObject',
+        's3:DeleteObject',
+        's3:CopyObject',
+      ],
+      resources: [`${bucket.bucketArn}/*`],
+    })
+
+    importFileParserLambda.addToRolePolicy(policy)
+
+    bucket.grantReadWrite(importFileParserLambda)
 
     bucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,

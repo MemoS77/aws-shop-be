@@ -27,3 +27,7 @@ export const logRequest = (event?: APIGatewayProxyEvent) => {
 export const logError = (err: unknown, message?: string) => {
   console.error('IMPORT_API_ERROR' + (message ? `: ${message}` : ''), err)
 }
+
+export const log = (...message: any) => {
+  console.log('IMPORT_MESSAGE', ...message)
+}
