@@ -20,7 +20,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
   try {
     const command = new PutObjectCommand(s3Params)
-    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 120 })
+    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 50 })
 
     return doResponse(200, { signedUrl })
   } catch (error) {

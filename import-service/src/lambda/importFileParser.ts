@@ -3,7 +3,6 @@ import {
   S3Client,
   GetObjectCommand,
   CopyObjectCommand,
-  DeleteObjectCommand,
 } from '@aws-sdk/client-s3'
 import * as stream from 'stream'
 import { log, logError } from './inc'
@@ -11,31 +10,21 @@ import CsvParser from './csvparser'
 
 const s3Client = new S3Client({})
 
-const moveFile = async (
+const copyFile = async (
   bucket: string,
   sourceKey: string,
   destinationKey: string,
 ) => {
   try {
-    log('Move file', sourceKey, destinationKey)
-    const copyResult = await s3Client.send(
+    log(`Try move file from ${sourceKey} to ${destinationKey}`)
+    await s3Client.send(
       new CopyObjectCommand({
         Bucket: bucket,
         CopySource: `/${bucket}/${sourceKey}`,
         Key: destinationKey,
       }),
     )
-
-    log('Copy result', copyResult)
-
-    const delRes = await s3Client.send(
-      new DeleteObjectCommand({
-        Bucket: bucket,
-        Key: sourceKey,
-      }),
-    )
-
-    log('Delete result', delRes)
+    // Deletion in separate lambda
   } catch (error) {
     logError(error, 'Error moving file')
   }
@@ -66,10 +55,10 @@ export const handler: S3Handler = async (event: S3Event) => {
         .on('error', (error) => {
           logError(error, 'Error parsing CSV')
         })
-        .on('close', () => {
-          log('CSV file closed!', key)
+        .on('close', async () => {
+          log('File closed!', key)
           const parsedKey = key.replace('uploaded/', 'parsed/')
-          moveFile(bucket, key, parsedKey)
+          await copyFile(bucket, key, parsedKey)
         })
     } else {
       throw new Error('Response body is not a readable stream.')

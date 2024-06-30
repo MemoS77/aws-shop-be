@@ -43,18 +43,25 @@ export class ImportServiceStack extends cdk.Stack {
       restApiName: 'Import Service API',
     })
 
+    const policy = new iam.PolicyStatement({
+      actions: [
+        's3:GetObject',
+        's3:PutObject',
+        's3:DeleteObject',
+        's3:CopyObject',
+      ],
+      resources: [`${bucket.bucketArn}/*`],
+    })
+
     const importResource = api.root.addResource('import')
     importResource.addMethod(
       'GET',
       new apigateway.LambdaIntegration(importProductsFileLambda),
     )
 
-    const apiGatewayPolicy = new iam.PolicyStatement({
-      actions: ['s3:GetObject', 's3:PutObject'],
-      resources: [`${bucket.bucketArn}/*`],
-    })
-    importProductsFileLambda.addToRolePolicy(apiGatewayPolicy)
+    importProductsFileLambda.addToRolePolicy(policy)
 
+    // Parser
     const importFileParserLambda = new lambda.Function(
       this,
       'ImportFileParserLambda',
@@ -66,18 +73,7 @@ export class ImportServiceStack extends cdk.Stack {
       },
     )
 
-    const policy = new iam.PolicyStatement({
-      actions: [
-        's3:GetObject',
-        's3:PutObject',
-        's3:DeleteObject',
-        's3:CopyObject',
-      ],
-      resources: [`${bucket.bucketArn}/*`],
-    })
-
     importFileParserLambda.addToRolePolicy(policy)
-
     bucket.grantReadWrite(importFileParserLambda)
 
     bucket.addEventNotification(
@@ -85,6 +81,25 @@ export class ImportServiceStack extends cdk.Stack {
       new s3n.LambdaDestination(importFileParserLambda),
       {
         prefix: 'uploaded/',
+      },
+    )
+
+    // Delete
+    const delFileLambda = new lambda.Function(this, 'DelFileLambda', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'delFile.handler',
+      code: lambda.Code.fromAsset(join(__dirname, '../dist/lambda')),
+      environment,
+    })
+
+    delFileLambda.addToRolePolicy(policy)
+    bucket.grantReadWrite(delFileLambda)
+
+    bucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED,
+      new s3n.LambdaDestination(delFileLambda),
+      {
+        prefix: 'parsed/',
       },
     )
   }

@@ -28,6 +28,6 @@ export const logError = (err: unknown, message?: string) => {
   console.error('IMPORT_API_ERROR' + (message ? `: ${message}` : ''), err)
 }
 
-export const log = (...message: any) => {
-  console.log('IMPORT_MESSAGE', ...message)
+export const log = (...fields: any) => {
+  console.log('IMPORT_LOG', ...fields)
 }
