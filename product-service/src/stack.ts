@@ -8,15 +8,6 @@ export class ProductServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props)
 
-    /*
-    const productsTable = new dynamodb.Table(this, 'products2', {
-      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
-    })
-
-    const stockTable = new dynamodb.Table(this, 'stock2', {
-      partitionKey: { name: 'product_id', type: dynamodb.AttributeType.STRING },
-    })*/
-
     const productsTable = dynamodb.Table.fromTableName(
       this,
       'ExistingProductsTable',
@@ -89,12 +80,11 @@ export class ProductServiceStack extends cdk.Stack {
 
     const gate = new apigateway.LambdaIntegration(createProductFunction)
     productsResource.addMethod('POST', gate)
-    //productsResource.addMethod('PUT', gate)
 
     const productByIdResource = productsResource.addResource('{id}')
     productByIdResource.addMethod(
       'GET',
       new apigateway.LambdaIntegration(getProductsById),
-    ) // GET /products/{id}
+    )
   }
 }

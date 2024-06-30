@@ -6,8 +6,8 @@
   },
   "scripts": {
     "clean": "rimraf dist",
-    "init": "node dist/model/init.js",
     "build": "npm run clean && tsc",
+    "init": "node dist/model/init.js",
     "watch": "tsc -w",
     "test": "jest",
     "deploy": "cdk deploy",
