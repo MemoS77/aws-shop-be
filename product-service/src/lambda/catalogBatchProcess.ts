@@ -19,18 +19,16 @@ export const handler = async (event: { Records: any[] }) => {
   const snsClient = new SNSClient()
 
   try {
+    const list = `Products: ${putRequests
+      .map((pr) => pr.PutRequest.Item.title)
+      .join(', ')}`
     const snsMessage = {
-      Message: `Products titles: ${putRequests
-        .map((pr) => pr.PutRequest.Item.title)
-        .join(', ')}`,
+      Message: list,
       TopicArn: SNS_TOPIC_ARN,
     }
-
+    log('Need create: ', list)
     await snsClient.send(new PublishCommand(snsMessage))
-    log('Success send sns!')
   } catch (error) {
     logError(error)
   }
-
-  console.log('TTT', putRequests)
 }

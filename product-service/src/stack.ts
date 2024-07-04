@@ -3,9 +3,9 @@ import { Construct } from 'constructs'
 import * as lambda from 'aws-cdk-lib/aws-lambda'
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb'
-//import * as sqs from 'aws-cdk-lib/aws-sqs'
+import * as sqs from 'aws-cdk-lib/aws-sqs'
 import * as sns from 'aws-cdk-lib/aws-sns'
-//import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources'
+import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources'
 import * as snsSubscriptions from 'aws-cdk-lib/aws-sns-subscriptions'
 
 export class ProductServiceStack extends cdk.Stack {
@@ -97,10 +97,9 @@ export class ProductServiceStack extends cdk.Stack {
     )
 
     // Task 6
-    /*
     const catalogItemsQueue = new sqs.Queue(this, 'catalogItemsQueue', {
       visibilityTimeout: cdk.Duration.seconds(300),
-    })*/
+    })
 
     const createProductTopic = new sns.Topic(this, 'createProductTopic', {
       displayName: 'Create Product Topic',
@@ -124,16 +123,15 @@ export class ProductServiceStack extends cdk.Stack {
       },
     )
 
-    /*
     const eventSource = new lambdaEventSources.SqsEventSource(
       catalogItemsQueue,
       {
         batchSize: 5,
         maxBatchingWindow: cdk.Duration.seconds(3),
       },
-    )*/
+    )
 
-    //catalogBatchProcess.addEventSource(eventSource)
+    catalogBatchProcess.addEventSource(eventSource)
     productsTable.grantWriteData(catalogBatchProcess)
   }
 }
