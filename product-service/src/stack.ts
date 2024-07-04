@@ -98,7 +98,7 @@ export class ProductServiceStack extends cdk.Stack {
 
     // Task 6
     const catalogItemsQueue = new sqs.Queue(this, 'catalogItemsQueue', {
-      visibilityTimeout: cdk.Duration.seconds(300),
+      visibilityTimeout: cdk.Duration.seconds(30),
     })
 
     const createProductTopic = new sns.Topic(this, 'createProductTopic', {
@@ -133,5 +133,10 @@ export class ProductServiceStack extends cdk.Stack {
 
     catalogBatchProcess.addEventSource(eventSource)
     productsTable.grantWriteData(catalogBatchProcess)
+
+    new cdk.CfnOutput(this, 'SQS URL', {
+      value: catalogItemsQueue.queueUrl,
+      description: 'The URL of the SQS queue',
+    })
   }
 }
