@@ -3,9 +3,18 @@ import { Construct } from 'constructs'
 import * as lambda from 'aws-cdk-lib/aws-lambda'
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb'
+//import * as sqs from 'aws-cdk-lib/aws-sqs'
+import * as sns from 'aws-cdk-lib/aws-sns'
+//import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources'
+import * as snsSubscriptions from 'aws-cdk-lib/aws-sns-subscriptions'
 
 export class ProductServiceStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(
+    email: string,
+    scope: Construct,
+    id: string,
+    props?: cdk.StackProps,
+  ) {
     super(scope, id, props)
 
     const productsTable = dynamodb.Table.fromTableName(
@@ -86,5 +95,45 @@ export class ProductServiceStack extends cdk.Stack {
       'GET',
       new apigateway.LambdaIntegration(getProductsById),
     )
+
+    // Task 6
+    /*
+    const catalogItemsQueue = new sqs.Queue(this, 'catalogItemsQueue', {
+      visibilityTimeout: cdk.Duration.seconds(300),
+    })*/
+
+    const createProductTopic = new sns.Topic(this, 'createProductTopic', {
+      displayName: 'Create Product Topic',
+    })
+
+    createProductTopic.addSubscription(
+      new snsSubscriptions.EmailSubscription(email),
+    )
+
+    const catalogBatchProcess = new lambda.Function(
+      this,
+      'catalogBatchProcess',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        code: lambda.Code.fromAsset('./dist/lambda'),
+        handler: 'catalogBatchProcess.handler',
+        environment: {
+          ...environment,
+          SNS_TOPIC_ARN: createProductTopic.topicArn,
+        },
+      },
+    )
+
+    /*
+    const eventSource = new lambdaEventSources.SqsEventSource(
+      catalogItemsQueue,
+      {
+        batchSize: 5,
+        maxBatchingWindow: cdk.Duration.seconds(3),
+      },
+    )*/
+
+    //catalogBatchProcess.addEventSource(eventSource)
+    productsTable.grantWriteData(catalogBatchProcess)
   }
 }

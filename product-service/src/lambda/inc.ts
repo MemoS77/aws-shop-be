@@ -28,5 +28,10 @@ export const logError = (err: unknown, message?: string) => {
   console.error('API_ERROR' + (message ? `: ${message}` : ''), err)
 }
 
+export const log = (...fields: any) => {
+  console.log('PRODUCT_LOG', ...fields)
+}
+
 export const TABLE_PRODUCTS = process.env.TABLE_PRODUCTS!
 export const TABLE_STOCKS = process.env.TABLE_STOCKS!
+export const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN!
