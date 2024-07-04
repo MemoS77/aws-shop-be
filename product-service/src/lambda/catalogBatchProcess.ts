@@ -9,8 +9,6 @@ export const handler = async (event: { Records: any[] }) => {
         Item: {
           id: body.id,
           title: body.title,
-          description: body.description,
-          price: body.price,
         },
       },
     }

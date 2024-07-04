@@ -136,7 +136,12 @@ export class ProductServiceStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'SQS URL', {
       value: catalogItemsQueue.queueUrl,
-      description: 'The URL of the SQS queue',
+      exportName: 'CatalogItemsQueueUrl',
+    })
+
+    new cdk.CfnOutput(this, 'CatalogItemsQueueArn', {
+      value: catalogItemsQueue.queueArn,
+      exportName: 'CatalogItemsQueueArn',
     })
   }
 }

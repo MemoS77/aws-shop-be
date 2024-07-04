@@ -7,8 +7,27 @@ import {
 import * as stream from 'stream'
 import { log, logError } from './inc'
 import CsvParser from './csvparser'
+import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
 
 const s3Client = new S3Client({})
+
+const sqsClient = new SQSClient({})
+
+const SQS_URL = process.env.SQS_URL
+
+const sendSqs = async (data: any) => {
+  const sqsParams = {
+    QueueUrl: SQS_URL,
+    MessageBody: JSON.stringify(data),
+  }
+
+  try {
+    await sqsClient.send(new SendMessageCommand(sqsParams))
+    log('Sent record to SQS', data)
+  } catch (error) {
+    logError(error, `Error sending record to SQS: ${SQS_URL}`)
+  }
+}
 
 const copyFile = async (
   bucket: string,
@@ -16,7 +35,7 @@ const copyFile = async (
   destinationKey: string,
 ) => {
   try {
-    log(`Try move file from ${sourceKey} to ${destinationKey}`)
+    log('Copying file from ${sourceKey} to ${destinationKey}')
     await s3Client.send(
       new CopyObjectCommand({
         Bucket: bucket,
@@ -26,7 +45,7 @@ const copyFile = async (
     )
     // Deletion in separate lambda
   } catch (error) {
-    logError(error, 'Error moving file')
+    logError(error, 'Error copying file from ${sourceKey} to ${destinationKey}')
   }
 }
 
@@ -47,19 +66,29 @@ export const handler: S3Handler = async (event: S3Event) => {
     const results: any[] = []
 
     if (response.Body instanceof stream.Readable) {
-      response.Body.pipe(new CsvParser())
-        .on('data', (data) => results.push(data))
-        .on('end', () => {
-          log('CSV Data', results)
+      // Promisified pipe function
+      const parseCsv = (body: stream.Readable) => {
+        return new Promise<void>((resolve, reject) => {
+          body
+            .pipe(new CsvParser())
+            .on('data', (data) => {
+              results.push(data)
+            })
+            .on('end', () => {
+              log('CSV Data parsed', results)
+              resolve()
+            })
+            .on('error', (error) => {
+              logError(error, 'Error parsing CSV')
+              reject(error)
+            })
         })
-        .on('error', (error) => {
-          logError(error, 'Error parsing CSV')
-        })
-        .on('close', async () => {
-          log('File closed!', key)
-          const parsedKey = key.replace('uploaded/', 'parsed/')
-          await copyFile(bucket, key, parsedKey)
-        })
+      }
+      await parseCsv(response.Body)
+      await Promise.all(results.map((data) => sendSqs(data)))
+      log('All data sent to SQS')
+      const parsedKey = key.replace('uploaded/', 'parsed/')
+      copyFile(bucket, key, parsedKey)
     } else {
       throw new Error('Response body is not a readable stream.')
     }
