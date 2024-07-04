@@ -96,7 +96,6 @@ export class ProductServiceStack extends cdk.Stack {
       new apigateway.LambdaIntegration(getProductsById),
     )
 
-    // Task 6
     const catalogItemsQueue = new sqs.Queue(this, 'catalogItemsQueue', {
       visibilityTimeout: cdk.Duration.seconds(30),
     })
@@ -122,6 +121,8 @@ export class ProductServiceStack extends cdk.Stack {
         },
       },
     )
+
+    createProductTopic.grantPublish(catalogBatchProcess)
 
     const eventSource = new lambdaEventSources.SqsEventSource(
       catalogItemsQueue,
