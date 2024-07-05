@@ -96,10 +96,6 @@ export class ProductServiceStack extends cdk.Stack {
       new apigateway.LambdaIntegration(getProductsById),
     )
 
-    const catalogItemsQueue = new sqs.Queue(this, 'catalogItemsQueue', {
-      visibilityTimeout: cdk.Duration.seconds(30),
-    })
-
     const createProductTopic = new sns.Topic(this, 'createProductTopic', {
       displayName: 'Create Product Topic',
     })
@@ -125,6 +121,13 @@ export class ProductServiceStack extends cdk.Stack {
     productsTable.grantReadWriteData(catalogBatchProcess)
     stocksTable.grantReadWriteData(catalogBatchProcess)
     createProductTopic.grantPublish(catalogBatchProcess)
+
+    const catalogItemsQueue = new sqs.Queue(this, 'catalogItemsQueue', {
+      visibilityTimeout: cdk.Duration.seconds(100),
+      retentionPeriod: cdk.Duration.seconds(100),
+      receiveMessageWaitTime: cdk.Duration.seconds(3),
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    })
 
     const eventSource = new lambdaEventSources.SqsEventSource(
       catalogItemsQueue,

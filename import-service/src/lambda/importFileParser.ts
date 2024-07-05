@@ -35,7 +35,7 @@ const copyFile = async (
   destinationKey: string,
 ) => {
   try {
-    log('Copying file from ${sourceKey} to ${destinationKey}')
+    log(`Copying file from ${sourceKey} to ${destinationKey}`)
     await s3Client.send(
       new CopyObjectCommand({
         Bucket: bucket,
@@ -45,7 +45,7 @@ const copyFile = async (
     )
     // Deletion in separate lambda
   } catch (error) {
-    logError(error, 'Error copying file from ${sourceKey} to ${destinationKey}')
+    logError(error, `Error copying file from ${sourceKey} to ${destinationKey}`)
   }
 }
 
@@ -88,7 +88,7 @@ export const handler: S3Handler = async (event: S3Event) => {
       await Promise.all(results.map((data) => sendSqs(data)))
       log('All data sent to SQS')
       const parsedKey = key.replace('uploaded/', 'parsed/')
-      copyFile(bucket, key, parsedKey)
+      await copyFile(bucket, key, parsedKey)
     } else {
       throw new Error('Response body is not a readable stream.')
     }
