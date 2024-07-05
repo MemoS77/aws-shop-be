@@ -8,6 +8,10 @@ Front-end deploy: https://d1sqwar1feok6t.cloudfront.net/
 
 - product-service
 
+## In progress
+
+- import-service
+
 ## Full App Scheme:
 
 ![alt text](scheme.png)
