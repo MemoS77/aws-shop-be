@@ -10,29 +10,53 @@ import { transaction } from './db'
 
 export const handler = async (event: { Records: any[] }) => {
   try {
-    let message = 'Products added: '
+    let message = 'Products to add: '
     let transList: any[] = []
 
-    event.Records.forEach((record) => {
-      const body = JSON.parse(record.body)
+    //event.Records.forEach((record) =>
+    for (const record of event.Records) {
+      try {
+        const body = JSON.parse(record.body)
 
-      const productItem = {
-        id: body.id,
-        title: body.title,
-        description: body.description,
-        price: body.price,
+        const productItem = {
+          id: body.id,
+          title: body.title,
+          description: body.description,
+          price: +body.price,
+        }
+
+        const stockItem = {
+          product_id: body.id,
+          count: +body.count,
+        }
+
+        // Валидность данных
+        if (
+          !productItem.id ||
+          !productItem.title ||
+          !productItem.description ||
+          typeof productItem.price !== 'number' ||
+          typeof stockItem.count !== 'number'
+        )
+          continue
+
+        transList.push({
+          Put: { TableName: TABLE_PRODUCTS, Item: productItem },
+        })
+        transList.push({ Put: { TableName: TABLE_STOCKS, Item: stockItem } })
+
+        message += `\n${JSON.stringify(body)}`
+      } catch (error) {
+        logError(error, 'Bad item')
       }
+    }
 
-      const stockItem = {
-        product_id: body.id,
-        count: body.count,
-      }
+    if (!transList.length) {
+      log('No products to add!')
+      return
+    }
 
-      transList.push({ Put: { TableName: TABLE_PRODUCTS, Item: productItem } })
-      transList.push({ Put: { TableName: TABLE_STOCKS, Item: stockItem } })
-
-      message += `\n${JSON.stringify(body)}`
-    })
+    log(message)
 
     try {
       await transaction(transList)
@@ -46,7 +70,7 @@ export const handler = async (event: { Records: any[] }) => {
         Message: message,
         TopicArn: SNS_TOPIC_ARN,
       }
-      log(message)
+
       await snsClient.send(new PublishCommand(snsMessage))
     } catch (error) {
       logError(error, 'SNS Error!')
