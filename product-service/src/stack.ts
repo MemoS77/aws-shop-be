@@ -122,6 +122,8 @@ export class ProductServiceStack extends cdk.Stack {
       },
     )
 
+    productsTable.grantReadWriteData(catalogBatchProcess)
+    stocksTable.grantReadWriteData(catalogBatchProcess)
     createProductTopic.grantPublish(catalogBatchProcess)
 
     const eventSource = new lambdaEventSources.SqsEventSource(
@@ -133,7 +135,6 @@ export class ProductServiceStack extends cdk.Stack {
     )
 
     catalogBatchProcess.addEventSource(eventSource)
-    productsTable.grantWriteData(catalogBatchProcess)
 
     new cdk.CfnOutput(this, 'SQS URL', {
       value: catalogItemsQueue.queueUrl,

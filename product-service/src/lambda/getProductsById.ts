@@ -9,8 +9,6 @@ import {
 import { getOne } from './db'
 
 export const handler = async (event: APIGatewayProxyEvent) => {
-  logRequest(event)
-
   try {
     const id = event.pathParameters?.id
     if (id && id.length) {

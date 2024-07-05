@@ -1,16 +1,8 @@
 import { APIGatewayProxyEvent } from 'aws-lambda'
 import { getAll } from './db'
-import {
-  TABLE_PRODUCTS,
-  TABLE_STOCKS,
-  doResponse,
-  logError,
-  logRequest,
-} from './inc'
+import { TABLE_PRODUCTS, TABLE_STOCKS, doResponse, logError } from './inc'
 
-export const handler = async (event?: APIGatewayProxyEvent) => {
-  logRequest(event)
-
+export const handler = async (_event?: APIGatewayProxyEvent) => {
   try {
     const products = await getAll(TABLE_PRODUCTS)
     const stocks = await getAll(TABLE_STOCKS)
