@@ -7,10 +7,11 @@ import * as sqs from 'aws-cdk-lib/aws-sqs'
 import * as sns from 'aws-cdk-lib/aws-sns'
 import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources'
 import * as snsSubscriptions from 'aws-cdk-lib/aws-sns-subscriptions'
+import { AppConf } from './types'
 
 export class ProductServiceStack extends cdk.Stack {
   constructor(
-    email: string,
+    conf: AppConf,
     scope: Construct,
     id: string,
     props?: cdk.StackProps,
@@ -100,9 +101,11 @@ export class ProductServiceStack extends cdk.Stack {
       displayName: 'Create Product Topic',
     })
 
-    createProductTopic.addSubscription(
-      new snsSubscriptions.EmailSubscription(email),
-    )
+    if (!conf.noEmails && conf.email) {
+      createProductTopic.addSubscription(
+        new snsSubscriptions.EmailSubscription(conf.email),
+      )
+    }
 
     const catalogBatchProcess = new lambda.Function(
       this,
@@ -125,7 +128,7 @@ export class ProductServiceStack extends cdk.Stack {
     const catalogItemsQueue = new sqs.Queue(this, 'catalogItemsQueue', {
       visibilityTimeout: cdk.Duration.seconds(100),
       retentionPeriod: cdk.Duration.seconds(100),
-      receiveMessageWaitTime: cdk.Duration.seconds(3),
+      receiveMessageWaitTime: cdk.Duration.seconds(10),
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     })
 
@@ -133,7 +136,7 @@ export class ProductServiceStack extends cdk.Stack {
       catalogItemsQueue,
       {
         batchSize: 5,
-        maxBatchingWindow: cdk.Duration.seconds(3),
+        maxBatchingWindow: cdk.Duration.seconds(10),
       },
     )
 
