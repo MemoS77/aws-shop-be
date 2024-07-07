@@ -1,7 +1,7 @@
 import { handler } from '../lambda/catalogBatchProcess' // Подставьте правильный путь к файлу с функцией
 import { SNSClient } from '@aws-sdk/client-sns'
 import { transaction } from '../lambda/db'
-import { log, logError } from '../lambda/inc'
+import { log } from '../lambda/inc'
 
 jest.mock('@aws-sdk/client-sns', () => {
   return {
@@ -18,7 +18,6 @@ jest.mock('../lambda/db', () => ({
 
 jest.mock('../lambda/inc', () => ({
   log: jest.fn(),
-  logError: jest.fn(),
 }))
 
 describe('handler', () => {
