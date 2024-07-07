@@ -7,11 +7,14 @@ import {
   TABLE_STOCKS,
 } from './inc'
 import { transaction } from './db'
+import { randomUUID } from 'crypto'
 
 export const handler = async (event: { Records: any[] }) => {
   try {
-    let message = 'Products to add: '
+    let lcMessage = ''
+    let hcMessage = ''
     let transList: any[] = []
+    const HIGH_PRICE = 10
 
     //event.Records.forEach((record) =>
     for (const record of event.Records) {
@@ -25,14 +28,15 @@ export const handler = async (event: { Records: any[] }) => {
           price: +body.price,
         }
 
+        if (!productItem.id) productItem.id = randomUUID()
+
         const stockItem = {
-          product_id: body.id,
+          product_id: productItem.id,
           count: +body.count,
         }
 
         // Валидность данных
         if (
-          !productItem.id ||
           !productItem.title ||
           !productItem.description ||
           typeof productItem.price !== 'number' ||
@@ -45,7 +49,11 @@ export const handler = async (event: { Records: any[] }) => {
         })
         transList.push({ Put: { TableName: TABLE_STOCKS, Item: stockItem } })
 
-        message += `\n${JSON.stringify(body)}`
+        const t = JSON.stringify(productItem)
+
+        productItem.price >= HIGH_PRICE
+          ? (hcMessage += `\n${t}`)
+          : (lcMessage += `\n${t}`)
       } catch (error) {
         logError(error, 'Bad item')
       }
@@ -56,22 +64,45 @@ export const handler = async (event: { Records: any[] }) => {
       return
     }
 
-    log(message)
-
     try {
       await transaction(transList)
     } catch (error) {
       logError(error, 'DB Transactiion error!')
     }
 
-    const snsClient = new SNSClient()
+    log('Products added', transList.length)
+
     try {
-      const snsMessage = {
-        Message: message,
-        TopicArn: SNS_TOPIC_ARN,
+      const snsClient = new SNSClient()
+      if (lcMessage.length) {
+        log('Low cost products', lcMessage)
+        const snsMessage = {
+          Message: 'Low cost produts:' + lcMessage,
+          TopicArn: SNS_TOPIC_ARN,
+          MessageAttributes: {
+            isHighCost: {
+              DataType: 'String',
+              StringValue: 'false',
+            },
+          },
+        }
+        await snsClient.send(new PublishCommand(snsMessage))
       }
 
-      await snsClient.send(new PublishCommand(snsMessage))
+      if (hcMessage.length) {
+        log('High cost products', hcMessage)
+        const snsMessage = {
+          Message: 'High cost produts:' + hcMessage,
+          TopicArn: SNS_TOPIC_ARN,
+          MessageAttributes: {
+            isHighCost: {
+              DataType: 'String',
+              StringValue: 'true',
+            },
+          },
+        }
+        await snsClient.send(new PublishCommand(snsMessage))
+      }
     } catch (error) {
       logError(error, 'SNS Error!')
     }

@@ -7,16 +7,21 @@ import {
 import * as stream from 'stream'
 import { log, logError } from './inc'
 import CsvParser from './csvparser'
-import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
+import {
+  SQSClient,
+  SendMessageBatchCommand,
+  SendMessageBatchCommandInput,
+  //SendMessageCommand,
+  //SendMessageCommandInput,
+} from '@aws-sdk/client-sqs'
 
 const s3Client = new S3Client({})
-
 const sqsClient = new SQSClient({})
-
 const SQS_URL = process.env.SQS_URL
 
+/*
 const sendSqs = async (data: any) => {
-  const sqsParams = {
+  const sqsParams: SendMessageCommandInput = {
     QueueUrl: SQS_URL,
     MessageBody: JSON.stringify(data),
   }
@@ -26,6 +31,33 @@ const sendSqs = async (data: any) => {
     log('Sent record to SQS', data)
   } catch (error) {
     logError(error, `Error sending record to SQS: ${SQS_URL}`)
+  }
+}*/
+
+const sendSqsBatch = async (messages: any[]) => {
+  // Функция для отправки одного батча
+  const sendBatch = async (batch: any[], batchIndex: number) => {
+    const sqsParams: SendMessageBatchCommandInput = {
+      QueueUrl: SQS_URL,
+      Entries: batch.map((message, index) => ({
+        Id: `batch-${batchIndex}-message-${index}`,
+        MessageBody: JSON.stringify(message),
+      })),
+    }
+    try {
+      const result = await sqsClient.send(
+        new SendMessageBatchCommand(sqsParams),
+      )
+      log('Sent batch to SQS', result)
+    } catch (error) {
+      logError(error, `Error sending batch of records to SQS: ${SQS_URL}`)
+    }
+  }
+
+  const batchSize = 10
+  for (let i = 0; i < messages.length; i += batchSize) {
+    const batch = messages.slice(i, i + batchSize)
+    await sendBatch(batch, i / batchSize) // Передаем индекс батча для создания уникальных Id
   }
 }
 
@@ -85,7 +117,8 @@ export const handler: S3Handler = async (event: S3Event) => {
         })
       }
       await parseCsv(response.Body)
-      await Promise.all(results.map((data) => sendSqs(data)))
+      //await Promise.all(results.map((data) => sendSqs(data)))
+      await sendSqsBatch(results)
       log('All data sent to SQS')
       const parsedKey = key.replace('uploaded/', 'parsed/')
       await copyFile(bucket, key, parsedKey)

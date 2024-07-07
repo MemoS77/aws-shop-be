@@ -97,13 +97,34 @@ export class ProductServiceStack extends cdk.Stack {
       new apigateway.LambdaIntegration(getProductsById),
     )
 
+    // SNS Topic
     const createProductTopic = new sns.Topic(this, 'createProductTopic', {
       displayName: 'Create Product Topic',
     })
 
+    // Email subscription for low-cost products
+    if (!conf.noEmails && conf.lowCostEmail) {
+      createProductTopic.addSubscription(
+        new snsSubscriptions.EmailSubscription(conf.lowCostEmail, {
+          filterPolicy: {
+            isHighCost: sns.SubscriptionFilter.stringFilter({
+              allowlist: ['false'],
+            }),
+          },
+        }),
+      )
+    }
+
+    // Default email subscription
     if (!conf.noEmails && conf.email) {
       createProductTopic.addSubscription(
-        new snsSubscriptions.EmailSubscription(conf.email),
+        new snsSubscriptions.EmailSubscription(conf.email, {
+          filterPolicy: {
+            isHighCost: sns.SubscriptionFilter.stringFilter({
+              allowlist: ['true'],
+            }),
+          },
+        }),
       )
     }
 
@@ -128,7 +149,6 @@ export class ProductServiceStack extends cdk.Stack {
     const catalogItemsQueue = new sqs.Queue(this, 'catalogItemsQueue', {
       visibilityTimeout: cdk.Duration.seconds(100),
       retentionPeriod: cdk.Duration.seconds(100),
-      receiveMessageWaitTime: cdk.Duration.seconds(10),
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     })
 
