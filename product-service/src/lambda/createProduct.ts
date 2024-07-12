@@ -40,13 +40,6 @@ export const handler = async (event: APIGatewayProxyEvent) => {
         }),
       }
     }
-    /*
-    const item = await createProduct(TABLE_PRODUCTS, {
-      id,
-      title,
-      description,
-      price,
-    })*/
 
     const id = randomUUID()
 

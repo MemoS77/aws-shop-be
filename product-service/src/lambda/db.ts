@@ -2,7 +2,6 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import {
   DynamoDBDocumentClient,
   GetCommand,
-  PutCommand,
   ScanCommand,
   TransactWriteCommand,
 } from '@aws-sdk/lib-dynamodb'
@@ -45,7 +44,7 @@ export async function createProduct(
 }*/
 
 export async function transaction(
-  transactItems: any,
+  transactItems: any[],
 ): Promise<any | undefined> {
   const command = new TransactWriteCommand({
     TransactItems: transactItems,

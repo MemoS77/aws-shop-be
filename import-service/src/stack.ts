@@ -22,8 +22,12 @@ export class ImportServiceStack extends cdk.Stack {
       ],
     })
 
+    const catalogItemsQueueUrl = cdk.Fn.importValue('CatalogItemsQueueUrl')
+    const catalogItemsQueueArn = cdk.Fn.importValue('CatalogItemsQueueArn')
+
     const environment = {
       BUCKET_NAME: bucket.bucketName,
+      SQS_URL: catalogItemsQueueUrl,
     }
 
     const importProductsFileLambda = new lambda.Function(
@@ -102,5 +106,11 @@ export class ImportServiceStack extends cdk.Stack {
         prefix: 'parsed/',
       },
     )
+
+    const sqsPolicy = new iam.PolicyStatement({
+      actions: ['sqs:SendMessage'],
+      resources: [catalogItemsQueueArn],
+    })
+    importFileParserLambda.addToRolePolicy(sqsPolicy)
   }
 }
