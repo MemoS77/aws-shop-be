@@ -18,7 +18,7 @@ export class AuthorizationServiceStack extends cdk.Stack {
     }
 
     const environment = {
-      token: `${login}=${pass}`,
+      token: `${login}:${pass}`,
     }
 
     const basicAuthorizer = new lambda.Function(
