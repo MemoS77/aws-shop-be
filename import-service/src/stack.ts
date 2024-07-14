@@ -6,6 +6,13 @@ import * as s3n from 'aws-cdk-lib/aws-s3-notifications'
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as iam from 'aws-cdk-lib/aws-iam'
 import { join } from 'path'
+import {
+  Cors,
+  IdentitySource,
+  RequestAuthorizer,
+} from 'aws-cdk-lib/aws-apigateway'
+import { Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
+import { Duration } from 'aws-cdk-lib'
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -16,7 +23,7 @@ export class ImportServiceStack extends cdk.Stack {
       cors: [
         {
           allowedMethods: [s3.HttpMethods.PUT, s3.HttpMethods.HEAD],
-          allowedOrigins: ['*'], // Для теста все. В продакшене необходимо: https://d1sqwar1feok6t.cloudfront.net
+          allowedOrigins: ['*'],
           allowedHeaders: ['*'],
         },
       ],
@@ -57,15 +64,46 @@ export class ImportServiceStack extends cdk.Stack {
       resources: [`${bucket.bucketArn}/*`],
     })
 
-    const importResource = api.root.addResource('import')
+    const basicAuthorizerArn = cdk.Fn.importValue('BasicAuthorizerLambdaArn')
+
+    const authFn = lambda.Function.fromFunctionArn(
+      this,
+      'ImportAuthFn',
+      basicAuthorizerArn,
+    )
+
+    /*
+    const authorizer = new apigateway.TokenAuthorizer(this, 'BasicAuthorizer', {
+      handler: authFn,
+    })
+      */
+
+    const role = new Role(this, 'ImportAuthRole', {
+      assumedBy: new ServicePrincipal('apigateway.amazonaws.com'),
+    })
+
+    const authorizer = new RequestAuthorizer(this, 'ImportServiceAuthorizer', {
+      handler: authFn,
+      identitySources: [IdentitySource.header('Authorization')],
+      assumeRole: role,
+    })
+
+    const importResource = api.root.addResource('import', {
+      defaultCorsPreflightOptions: {
+        allowOrigins: Cors.ALL_ORIGINS,
+        allowHeaders: Cors.DEFAULT_HEADERS,
+        allowMethods: ['GET'],
+      },
+    })
+
     importResource.addMethod(
       'GET',
       new apigateway.LambdaIntegration(importProductsFileLambda),
+      { authorizer, authorizationType: apigateway.AuthorizationType.CUSTOM },
     )
 
     importProductsFileLambda.addToRolePolicy(policy)
 
-    // Parser
     const importFileParserLambda = new lambda.Function(
       this,
       'ImportFileParserLambda',
@@ -78,6 +116,7 @@ export class ImportServiceStack extends cdk.Stack {
     )
 
     importFileParserLambda.addToRolePolicy(policy)
+
     bucket.grantReadWrite(importFileParserLambda)
 
     bucket.addEventNotification(
