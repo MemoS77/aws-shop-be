@@ -1,9 +1,9 @@
 import { APIGatewayProxyEvent } from 'aws-lambda'
 
 export const defHeader = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://d1sqwar1feok6t.cloudfront.net',
   'Access-Control-Allow-Headers': '*',
-  'Access-Control-Allow-Methods': '*',
+  'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS',
   'Access-Control-Allow-Credentials': true,
   'Content-Type': 'application/json',
 }
