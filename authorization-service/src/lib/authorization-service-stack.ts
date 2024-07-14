@@ -31,5 +31,11 @@ export class AuthorizationServiceStack extends cdk.Stack {
         environment,
       },
     )
+
+    const name = 'BasicAuthorizerLambdaArn'
+    new cdk.CfnOutput(this, name, {
+      value: basicAuthorizer.functionArn,
+      exportName: name,
+    })
   }
 }
