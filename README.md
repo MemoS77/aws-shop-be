@@ -7,10 +7,11 @@ Front-end deploy: https://d1sqwar1feok6t.cloudfront.net/
 ## Ready services
 
 - product-service
+- import-service
 
 ## In progress
 
-- import-service
+- authorization-service
 
 ## Full App Scheme:
 
