@@ -10,6 +10,7 @@ import {
   Cors,
   IdentitySource,
   RequestAuthorizer,
+  ResponseType,
 } from 'aws-cdk-lib/aws-apigateway'
 import { Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
 import { Duration } from 'aws-cdk-lib'
@@ -54,6 +55,16 @@ export class ImportServiceStack extends cdk.Stack {
       restApiName: 'Import Service API',
     })
 
+    const resp = {
+      type: ResponseType.DEFAULT_4XX,
+      responseHeaders: {
+        'Access-Control-Allow-Origin': "'*'",
+      },
+    }
+
+    api.addGatewayResponse('UnauthorizedResponse', resp)
+    api.addGatewayResponse('ForbiddenResponse', resp)
+
     const policy = new iam.PolicyStatement({
       actions: [
         's3:GetObject',
@@ -86,13 +97,13 @@ export class ImportServiceStack extends cdk.Stack {
       handler: authFn,
       identitySources: [IdentitySource.header('Authorization')],
       assumeRole: role,
+      resultsCacheTtl: Duration.seconds(0),
     })
 
     const importResource = api.root.addResource('import', {
       defaultCorsPreflightOptions: {
         allowOrigins: Cors.ALL_ORIGINS,
-        allowHeaders: Cors.DEFAULT_HEADERS,
-        allowMethods: ['GET'],
+        allowMethods: Cors.ALL_METHODS,
       },
     })
 
