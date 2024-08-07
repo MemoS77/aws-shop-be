@@ -2,8 +2,8 @@ import { APIGatewayProxyEvent } from 'aws-lambda'
 
 export const defHeader = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': '*',
-  'Access-Control-Allow-Methods': '*',
+  'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+  'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS',
   'Access-Control-Allow-Credentials': true,
   'Content-Type': 'application/json',
 }
