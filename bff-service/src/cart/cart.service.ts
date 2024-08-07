@@ -1,15 +1,25 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CartService {
+  private apiUrl = null;
+
+  constructor(private configService: ConfigService) {
+    this.apiUrl = this.configService.get<string>('CART_SERVICE');
+  }
+
   create(createCartDto: CreateCartDto) {
     return 'This action adds a new cart';
   }
 
   findAll() {
-    return `This action returns all cart`;
+    if (!this.apiUrl)
+      throw new InternalServerErrorException('Cart Service API URL not set');
+
+    return `This action returns all carts. Target AWS Service: ${this.apiUrl}`;
   }
 
   findOne(id: number) {
